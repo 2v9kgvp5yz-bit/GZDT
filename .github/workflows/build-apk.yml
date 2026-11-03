@@ -1,0 +1,40 @@
+name: 打包安卓 APK
+
+on:
+  push:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: 17
+
+      - uses: gradle/actions/setup-gradle@v4
+        with:
+          gradle-version: '8.14.3'
+
+      - name: 编译
+        run: |
+          F=$(find . -name settings.gradle -not -path './.git/*' | head -1)
+          if [ -z "$F" ]; then
+            echo "仓库里没有找到 settings.gradle，请把工程文件（app、gradle、build.gradle、settings.gradle 等）上传到仓库。现在仓库里的文件："
+            find . -maxdepth 3 -not -path './.git*' | head -50
+            exit 1
+          fi
+          cd "$(dirname "$F")"
+          echo "工程目录：$(pwd)"
+          gradle assembleRelease --no-daemon
+          mkdir -p "$GITHUB_WORKSPACE/out"
+          cp app/build/outputs/apk/release/*.apk "$GITHUB_WORKSPACE/out/广州地铁.apk"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: 广州地铁-apk
+          path: out/*.apk
