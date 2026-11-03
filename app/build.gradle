@@ -1,0 +1,43 @@
+plugins {
+    id 'com.android.application'
+}
+
+android {
+    namespace 'com.gzmetro.sim'
+    compileSdk 35
+
+    defaultConfig {
+        applicationId "com.gzmetro.sim"
+        minSdk 26
+        targetSdk 34
+        // 每次在 GitHub 打包，版本号自动加 1，手机会把它当成新版本来覆盖安装
+        def run = (System.getenv("GITHUB_RUN_NUMBER") ?: "1") as Integer
+        versionCode = run + 1
+        versionName = "1.0." + run
+    }
+
+    // 固定签名证书：每次重新打包的 APK 签名都一样，手机上可以直接覆盖升级，导入的录音不会丢
+    signingConfigs {
+        fixed {
+            storeFile file('gzmetro.keystore')
+            storePassword 'gzmetro123'
+            keyAlias 'gzmetro'
+            keyPassword 'gzmetro123'
+        }
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            signingConfig signingConfigs.fixed
+        }
+        debug {
+            signingConfig signingConfigs.fixed
+        }
+    }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
+    }
+}
